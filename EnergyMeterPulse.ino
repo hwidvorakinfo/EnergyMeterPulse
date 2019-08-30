@@ -19,8 +19,8 @@
 #define AUTOMATREADYFORDOWN     25
 #define AUTOMATREADYFORUP       30
 
-#define TIMERSTEP               1*60UL
-#define TIMERMIN                1*60UL
+#define TIMERSTEP               15*60UL
+#define TIMERMIN                15*60UL
 #define TIMERMAX                10*60*60UL
 
 #define METERCONSTANT           2000
