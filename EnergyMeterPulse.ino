@@ -26,10 +26,12 @@
 #define METERCONSTANT           2000
 
 void energymeterpulse_display_refresh(void);
+void pulse_irq(void);
 
 #include <LiquidCrystal.h>
 const int rs = 2, en = 4, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
-const int cidlo = 13;
+const int cidlo_poll = 13;
+const int cidlo = 3;
 const int tlOK = 8, tlUP = 7, tlDOWN = 6;
 static uint8_t stavcidla;
 static uint8_t automat = AUTOMATSTOP;
@@ -55,7 +57,11 @@ void setup()
   lcd.print("E-meter counter");
 
   // inicializace cidla a automatu
-  stavcidla = digitalRead(cidlo);
+  pinMode(cidlo_poll, INPUT);
+  pinMode(cidlo, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(cidlo), pulse_irq, RISING);
+  
+  //stavcidla = digitalRead(cidlo);
   automat = AUTOMATSTOP;
   counter = 0;
   timer = TIMERMIN;
@@ -69,17 +75,6 @@ void setup()
 
 void loop()
 {
-  // detekce stavu cidla pri behu casovace
-  if (automat == AUTOMATRUNNING)
-  {
-    if ((stavcidla == 0) && (digitalRead(cidlo) != 0))
-    {
-      // hrana 0->1
-      counter++;
-    }
-    stavcidla = digitalRead(cidlo);
-  }
-
   // obsluha automatu
   switch (automat)
   {
@@ -90,7 +85,7 @@ void loop()
       {
         // je stisknuto OK
         automat = AUTOMATREADYFORRUNNING;
-        Serial.println(automat);
+        //Serial.println(automat);
       }
       if (digitalRead(tlUP))
       {
@@ -101,7 +96,7 @@ void loop()
           timer += TIMERSTEP;
         }
         timer_preset = timer;
-        Serial.println(automat);
+        //Serial.println(automat);
       }
       if (digitalRead(tlDOWN))
       {
@@ -112,7 +107,7 @@ void loop()
           timer -= TIMERSTEP;
         }
         timer_preset = timer;
-        Serial.println(automat);
+        //Serial.println(automat);
       }
     break;
 
@@ -121,7 +116,7 @@ void loop()
       {
         // je opusten stisk OK
         automat = AUTOMATRUNNING;
-        Serial.println(automat);
+        //Serial.println(automat);
       }    
     break;
 
@@ -130,7 +125,7 @@ void loop()
       {
         // je stisknuto OK
         automat = AUTOMATREADYFORSTOP;
-        Serial.println(automat);
+        //Serial.println(automat);
       }   
       // zmena casovace
       if (millis()/1000 > milis)
@@ -153,7 +148,7 @@ void loop()
       {
         // je opusten stisk OK
         automat = AUTOMATSTOP;
-        Serial.println(automat);
+        //Serial.println(automat);
       }    
    
     case AUTOMATREADYFORUP:
@@ -161,7 +156,7 @@ void loop()
       {
         // je opusten stisk UP
         automat = AUTOMATSTOP;
-        Serial.println(automat);
+        //Serial.println(automat);
       }
     break;    
 
@@ -170,7 +165,7 @@ void loop()
       {
         // je opusten stisk DOWN
         automat = AUTOMATSTOP;
-        Serial.println(automat);
+        //Serial.println(automat);
       }    
     break;
 
@@ -222,7 +217,7 @@ void loop()
       {
         // je stisknuto OK
         automat = AUTOMATREADYFORSTOP;
-        Serial.println(automat);
+        //Serial.println(automat);
       }   
 
     break;
@@ -304,4 +299,10 @@ void energymeterpulse_display_refresh(void)
   #undef HOURS
   #undef MINS
   #undef SECS
+}
+
+// IRQ pro elektromerove pulsy
+void pulse_irq(void)
+{
+  counter++;
 }
